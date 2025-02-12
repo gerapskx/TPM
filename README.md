@@ -1,5 +1,5 @@
 # TPM
-TPM values calculation and display for RNA-seq experiments
+TPM values and display for RNA-seq experiments
 
 
 
