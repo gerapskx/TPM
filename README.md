@@ -62,7 +62,13 @@ tpm_matrix <- as.data.frame(tpm_matrix)
 write.table(tpm_matrix, file = "TPM_values.txt", sep = "\t", quote = FALSE, col.names = NA)
 
 
-genes_of_interest <- c("AT1G53430", "AT1G53440", "AT5G01950")
+genes_of_interest <- c("AT4G37270", 
+                       "AT4G30110",
+                       "AT4G30120",
+                       "AT2Gl9110",
+                       "AT5G44790",
+                       "AT4G33520",
+                       "AT1G63440")
 
 
 
@@ -81,7 +87,7 @@ pheatmap(log_tpm,
          cluster_rows = TRUE, cluster_cols = FALSE, annotation_col =  metadata,
          main = "Heatmap of TPM Values for Selected Arabidopsis Genes")
 
-selected_gene <- "AT1G63440"
+selected_gene <- "AT5G44790"
 if (selected_gene %in% rownames(tpm_matrix)) {
   gene_data <- data.frame(Sample = colnames(tpm_matrix), TPM = as.numeric(tpm_matrix[selected_gene, ]))
   
@@ -98,31 +104,37 @@ ggplot(gene_data, aes(x = factor(group), y = TPM, fill = factor(group))) +
   warning(paste("Selected gene", selected_gene, "not found in TPM matrix"))
 }
 
-ggplot(gene_data, aes(x = factor(group), y = TPM, fill = factor(group))) +
+plot2 <- ggplot(gene_data, aes(x = factor(group), y = TPM, fill = factor(group))) +
   geom_violin(trim = FALSE, alpha = 0.7) +
   geom_jitter(width = 0.2, alpha = 0.7, color = "black") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = paste("Violin Plot of TPM Values for", selected_gene), x = "Group", y = "TPM Value") +
+  labs(title = paste("TPM Values for HMA7-", selected_gene), x = "Group", y = "TPM Value") +
   theme(legend.position = "none") + theme_bw() +
-  stat_compare_means(method = "kruskal.test")
+  stat_compare_means(method = "anova")
 
 summary_data <- gene_data %>%
   group_by(group) %>%
-  summarise(mean_TPM = mean(TPM), 
-            sd_TPM = sd(TPM), 
-            n = n(),
-            se_TPM = sd_TPM / sqrt(n))
+  dplyr::summarise(mean_TPM = mean(TPM), 
+                   sd_TPM = sd(TPM), 
+                   n = dplyr::n(),
+                   se_TPM = sd_TPM / sqrt(n))
 
-ggplot(summary_data, aes(x = factor(group), y = mean_TPM, fill = factor(group))) +
-  geom_bar(stat = "identity", position = "dodge") +
-  geom_errorbar(aes(ymin = mean_TPM - se_TPM, ymax = mean_TPM + se_TPM), width = 0.2) +
-  labs(title = paste("Bar Plot of Mean TPM Values for", selected_gene), x = "Group", y = "Mean TPM Value") +
-  theme_minimal() +
-  ggpubr::stat_compare_means(method = "kruskal.test", label = "p.signif")
+plot1 <- ggplot(summary_data, aes(x = factor(group), y = mean_TPM, fill = factor(group))) +
+  geom_bar(stat = "identity", position = "dodge", color = "black", size = 0.8) +
+  geom_errorbar(aes(ymin = mean_TPM - se_TPM, ymax = mean_TPM + se_TPM), width = 0.2, size = 0.8) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(title = paste("HMA7-", selected_gene), x = "Group", y = "Mean TPM Value") +
+  theme_minimal(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        panel.grid.major = element_line(size = 0.2, linetype = "dotted"),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(fill = NA, color = "black", size = 1),
+        legend.position = "top") +
+  ggpubr::stat_compare_means(method = "", label = "p.signif")
 
-} else {
-  warning(paste("Selected gene", selected_gene, "not found in TPM matrix"))
-}
+library(patchwork)
+
+plot1 + plot2
 
 
 ```
@@ -134,5 +146,6 @@ ggplot(summary_data, aes(x = factor(group), y = mean_TPM, fill = factor(group)))
 
 ![image](https://github.com/user-attachments/assets/ef31d35e-117d-4506-99e3-2fe531b29990)
 
+![image](https://github.com/user-attachments/assets/82f542cf-a9b7-4874-83f2-661c8909db7b)
 
 
